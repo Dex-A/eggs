@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>eggs</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 0;
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        #canvas {
+            display: grid;
+            grid-template-columns: repeat(100, 10px);
+            grid-gap: 1px;
+            justify-content: center;
+            margin-top: 20px;
+            overflow: auto;
+            max-height: 800px;
+        }
+
+        .pixel {
+            width: 10px;
+            height: 10px;
+            background-color: white;
+            border: 1px solid #ccc;
+        }
+
+        #controls {
+            text-align: center;
+            margin: 20px;
+        }
+
+        #fake-transactions, #pixel-war {
+            margin: 20px;
+            text-align: center;
+        }
+
+        #fake-transactions button, #pixel-war button {
+            margin: 5px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        #leaderboard {
+            margin: 20px;
+            text-align: center;
+        }
+
+        #chat {
+            margin: 20px;
+            width: 80%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        #chatbox {
+            width: 100%;
+            height: 150px;
+            border: 1px solid #ccc;
+            overflow-y: scroll;
+            background-color: #fff;
+        }
+
+        #chatinput {
+            width: 100%;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>r/place Clone - 100x100 with Bots</h1>
+
+    <div id="canvas">
+        <!-- 100x100 grid will be created dynamically -->
+    </div>
+
+    <div id="controls">
+        <h2>Your Pixel Points: <span id="pixel-points">0</span></h2>
+        <button id="place-pixel">Place Pixel</button>
+        <button id="fill-5x5" style="display:none;">Premium: Fill 5x5</button>
+        <button id="fill-10x10" style="display:none;">Premium Plus: Fill 10x10</button>
+        <button id="fill-circle" style="display:none;">Uber Premium: Fill Circle</button>
+    </div>
+
+    <div id="fake-transactions">
+        <h2>Buy Premium</h2>
+        <button id="buy-premium">Buy Premium ($4.99)</button>
+        <button id="buy-premium-plus">Buy Premium Plus ($9.99)</button>
+        <button id="buy-uber-premium">Buy Uber Premium ($19.99)</button>
+    </div>
+
+    <div id="pixel-war">
+        <h2>Pixel War in Progress!</h2>
+        <button id="join-war">Join Pixel War</button>
+        <h3>War Leaderboard</h3>
+        <ul id="war-leaderboard">
+            <!-- Dynamic leaderboard of pixel war participants -->
+        </ul>
+    </div>
+
+    <div id="chat">
+        <h2>Chat</h2>
+        <div id="chatbox">
+            <!-- Chat messages appear here -->
+        </div>
+        <input type="text" id="chatinput" placeholder="Type your message here...">
+    </div>
+
+    <script>
+        // Pixel Points
+        let pixelPoints = 0;
+        const pixelPointsDisplay = document.getElementById("pixel-points");
+
+        // Canvas Setup (100x100)
+        const canvas = document.getElementById("canvas");
+        const pixels = [];
+        for (let i = 0; i < 100 * 100; i++) {
+            const pixel = document.createElement("div");
+            pixel.className = "pixel";
+            pixel.addEventListener("click", () => {
+                pixel.style.backgroundColor = "black"; // Default color when clicked
+                pixelPoints += 10; // Reward points for placing a pixel
+                pixelPointsDisplay.textContent = pixelPoints;
+            });
+            canvas.appendChild(pixel);
+            pixels.push(pixel);
+        }
+
+        // Premium Rank Logic
+        const premiumTools = {
+            "Premium": document.getElementById("fill-5x5"),
+            "Premium Plus": document.getElementById("fill-10x10"),
+            "Uber Premium": document.getElementById("fill-circle")
+        };
+
+        function unlockPremiumTools(rank) {
+            if (rank === "Premium") {
+                premiumTools["Premium"].style.display = "inline-block";
+            } else if (rank === "Premium Plus") {
+                premiumTools["Premium"].style.display = "inline-block";
+                premiumTools["Premium Plus"].style.display = "inline-block";
+            } else if (rank === "Uber Premium") {
+                premiumTools["Premium"].style.display = "inline-block";
+                premiumTools["Premium Plus"].style.display = "inline-block";
+                premiumTools["Uber Premium"].style.display = "inline-block";
+            }
+        }
+
+        // Fake Microtransactions
+        const premiumButtons = document.querySelectorAll("#fake-transactions button");
+        premiumButtons.forEach(button => {
+            button.addEventListener("click", () => {
+                alert("Transaction Complete! You have received Premium benefits.");
+                if (button.id === "buy-premium") unlockPremiumTools("Premium");
+                if (button.id === "buy-premium-plus") unlockPremiumTools("Premium Plus");
+                if (button.id === "buy-uber-premium") unlockPremiumTools("Uber Premium");
+            });
+        });
+
+        // Bot placing logic with real r/place-like behavior
+        function botPlacePixel() {
+            const randomIndex = Math.floor(Math.random() * (100 * 100));
+            const pixel = pixels[randomIndex];
+            const currentColor = pixel.style.backgroundColor;
+
+            // Bots sometimes replace colors
+            const botColors = ["red", "blue", "green", "yellow", "orange"];
+            const newColor = botColors[Math.floor(Math.random() * botColors.length)];
+            
+            // Decide action: Replace pixel, create pattern, or work randomly
+            const action = Math.random();
+
+            if (action < 0.6) {
+                // Randomly place pixel, mostly replacing others
+                pixel.style.backgroundColor = newColor;
+            } else if (action < 0.8) {
+                // Create a pattern: vertical line
+                for (let i = 0; i < 10; i++) {
+                    const linePixel = pixels[(randomIndex % 100) + i * 100];
+                    linePixel.style.backgroundColor = newColor;
+                }
+            } else {
+                // Target an area that's already colorful (common behavior in r/place)
+                for (let i = 0; i < 10; i++) {
+                    const clusterPixel = pixels[randomIndex + (i * 100)];
+                    if (clusterPixel.style.backgroundColor !== "white") {
+                        clusterPixel.style.backgroundColor = newColor;
+                    }
+                }
+            }
+
+            pixelPoints += 10; // Reward for bot placing a pixel
+            pixelPointsDisplay.textContent = pixelPoints;
+        }
+
+        // Generate random bot placements every 3 seconds
+        setInterval(botPlacePixel, 3000);
+
+        // Simulate collaborative bot chat
+        const chatbox = document.getElementById("chatbox");
+        const chatinput = document.getElementById("chatinput");
+
+        // Example bot usernames
+        const botUsernames = ["PixelMaster", "ArtisticBot", "ColorfulCoder", "RPlaceBot"];
+
+        function botChat() {
+            const botUsername = botUsernames[Math.floor(Math.random() * botUsernames.length)];
+            const botMessages = [
+                "I'm replacing that red with blue, looks better.",
+                "I think this section needs a vertical line.",
+                "Someone keeps ruining my pixel art!",
+                "Let's start a big green area in the bottom right.",
+                "Is anyone else going for the rainbow design?"
+            ];
+            const randomMessage = botMessages[Math.floor(Math.random() * botMessages.length)];
+            chatbox.innerHTML += `<p>${botUsername}: ${randomMessage}</p>`;
+            chatbox.scrollTop = chatbox.scrollHeight;
+        }
+
+        // Generate random bot messages every 5 seconds
+        setInterval(botChat, 5000);
+
+        // User chat input handling
+        chatinput.addEventListener("keypress", (e) => {
+            if (e.key === "Enter" && chatinput.value !== "") {
+                const userMessage = chatinput.value;
+                chatbox.innerHTML += `<p>You: ${userMessage}</p>`;
+                chatbox.scrollTop = chatbox.scrollHeight;
+                chatinput.value = "";
+            }
+        });
+    </script>
+
+</body>
+</html>
